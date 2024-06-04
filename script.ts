@@ -5,7 +5,7 @@ import fs from "node:fs";
 
 const FILE_NAME = "resource/r7_wordings.xlsx";
 const SHEET = "Sheet1";
-const SHEET_MAX_ROWS = 44;
+const SHEET_MAX_ROWS = 45;
 
 interface IDBRow {
   table: string; // can be 'long' | 'short' | 'rich'
@@ -32,9 +32,8 @@ workbook.xlsx
 
     [...Array(SHEET_MAX_ROWS).keys()].map((key) => {
       const line = worksheet.getRow(key + 1);
-
-      getDbRowFromExcelLine(line).map((query) => {
-        fs.appendFile("out/queries.sql", query + "\n", (err) => {
+      getDbRowFromExcelLine(line).map((result) => {
+        fs.appendFile("out/default.json", JSON.stringify(result) + "\n", (err) => {
           if (err) {
             console.log("Writing Query Error : " + err);
           }
@@ -149,6 +148,8 @@ const getDbRowFromExcelLine = (line: ExcelJS.Row) => {
 
   // if there is no problem with the wordings
   var db_rows = [];
+  var json_results = [];
+
   if (lineProcessable) {
     filtered_tokens.forEach((token) => {
       token.token.split(TOKENS_SEP).forEach((subtoken) => {
@@ -200,9 +201,7 @@ const getDbRowFromExcelLine = (line: ExcelJS.Row) => {
           );
         }
         if (toBeCrawledTokens.includes(table)) {
-          db_rows.push({
-            table,
-            id,
+          json_results.push({
             fr: fr_wording,
             en: en_wording,
             es: es_wording,
@@ -217,7 +216,7 @@ const getDbRowFromExcelLine = (line: ExcelJS.Row) => {
   } else {
     ignored_lines.push("Line " + line.number);
   }
-  return getSqlQueriesFromDbRows(db_rows);
+  return json_results;
 };
 
 // IGNORE THE RICH TEXT BECAUSE OF HTML TAGS => DONE
